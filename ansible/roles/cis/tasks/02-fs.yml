@@ -1,0 +1,63 @@
+- name: 1.1.1.1 Create cis conf file /etc/modprobe.d/cis.conf
+  become: true
+  template:
+    src: cis.conf.j2
+    dest: /etc/modprobe.d/cis.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: 1.1.1.1 Ensure mounting of cramfs filesystems is disabled
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/cis.conf
+    line: 'install cramfs /bin/true'
+    state: present
+
+- name: Ensure mounting of freevxfs filesystems is disabled
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/cis.conf
+    line: 'install freevxfs /bin/true'
+    state: present
+
+- name: Ensure mounting of jffs2 filesystems is disabled
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/cis.conf
+    line: 'install jffs2 /bin/true'
+    state: present
+
+- name: 1.1.1.2 Ensure mounting of hfs filesystems is disabled
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/cis.conf
+    line: 'install hfs /bin/true'
+    state: present
+
+- name: 1.1.1.3 Ensure mounting of hfsplus filesystems is disabled
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/cis.conf
+    line: 'install hfsplus /bin/true'
+    state: present
+
+- name: 1.1.1.4 Ensure mounting of squashfs filesystems is disabled
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/cis.conf
+    line: 'install squashfs /bin/true'
+    state: present
+
+- name: 1.1.1.5 Ensure mounting of udf filesystems is disabled
+  become: true
+  modprobe:
+    name: udf
+    state: absent
+
+- name: Ensure mounting of FAT filesystems is disabled
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/cis.conf
+    line: 'install vfat /bin/true'
+    state: present

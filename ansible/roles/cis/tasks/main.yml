@@ -1,0 +1,5 @@
+---
+- name: amazon-linux
+  block:
+  # - include_tasks: 01-setup.yml
+  - include_tasks: 02-fs.yml

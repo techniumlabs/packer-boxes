@@ -1,0 +1,29 @@
+---
+- name: Add EPEL Repository
+  become: true
+  yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+  when:
+    - ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2"
+
+- name: Install latest updates
+  become: true
+  yum:
+    name: '*'
+  when:
+    - ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2"
+
+- name: Install EPEL
+  become: true
+  yum:
+    name: epel-release
+    state: latest
+  when:
+    - ansible_facts['distribution'] == "Amazon" and ansible_facts['distribution_major_version'] == "2"
+
+- name: install selinux bindings
+  become: true
+  yum:
+    name: libselinux-python
+    state: present
