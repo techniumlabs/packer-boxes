@@ -1,0 +1,78 @@
+---
+# name: 4.1 Configure System Accounting (auditd)
+
+# name: 4.1.1 Configure Data Retention
+
+# name: 4.2 Configure Logging
+
+- name: 4.2.1 Configure rsyslog
+  become: true
+  yum:
+    name: rsyslog
+    state: present
+
+- name: 4.2.1.1 Ensure rsyslog Service is enabled
+  become: true
+  systemd:
+    name: rsyslog
+    enabled: yes
+
+- name: 4.2.1.3 Ensure rsyslog default file permissions configured
+  become: true
+  lineinfile:
+    path: /etc/rsyslog.conf
+    regexp: '^$FileCreateMode'
+    line: '$FileCreateMode 0640'
+    state: present
+
+#- name: 4.2.1.4 Ensure rsyslog is configured to send logs to a remote log host
+
+#- name: 4.2.2 Configure syslog-ng
+
+#- name: 4.2.3 Ensure rsyslog or syslog-ng is installed
+
+- name: 4.2.4 Ensure permissions on all logfiles are configured
+  become: true
+  find:
+    path: "/var/log/"
+    file_type: file
+    recurse: yes
+    depth: 2
+  register: outlist
+
+- name: 4.2.4 Change file permissions
+  become: true
+  file:
+    dest: '{{ item.path }}'
+    mode: g-wx,o-rwx
+  with_items: "{{ outlist.files }}"
+
+- name: 4.2.4.1 Ensure logfiles are present
+  become: true
+  copy:
+    content: ""
+    dest: "{{ item }}"
+    force: no
+  with_items:
+    - /var/log/messages
+    - /var/log/secure
+    - /var/log/maillog
+    - /var/log/cron
+    - /var/log/spooler
+    - /var/log/boot.log
+
+- name: 4.2.4.2 Ensure permissions on all logfiles are configured
+  become: true
+  file:
+    mode: "og-r"
+    owner: root
+    group: root
+    path: "{{ item }}"
+    state: file
+  with_items:
+    - /var/log/messages
+    - /var/log/secure
+    - /var/log/maillog
+    - /var/log/cron
+    - /var/log/spooler
+    - /var/log/boot.log

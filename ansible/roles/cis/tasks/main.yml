@@ -1,5 +1,8 @@
 ---
 - name: amazon-linux
   block:
-  # - include_tasks: 01-setup.yml
+  - include_tasks: 01-setup.yml
   - include_tasks: 02-fs.yml
+  - include_tasks: 03-services.yml
+  - include_tasks: 04-logging-and-auditing.yml
+  - include_tasks: 05-access-authentication-and-authorization.yml

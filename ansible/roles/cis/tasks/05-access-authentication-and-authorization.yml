@@ -1,0 +1,163 @@
+# ---
+# # TODO This is not idempotent. This needs to be fixed.
+# - name: register all the files in /etc/profile.d
+#   become: true
+#   raw: find /etc/profile.d -type f -name "*"
+#   register: profile_d_dir
+#   check_mode: no
+
+# # TODO This needs to be added to the files as new line
+# - name: change umask to 077 on all files in /etc/profile.d
+#   become: true
+#   lineinfile:
+#     dest: "{{ item }}"
+#     regexp: '^umask.*'
+#     line: 'umask 077'
+#     backup: no
+#   with_items: "{{ profile_d_dir.stdout_lines }}"
+#   ignore_errors: yes
+
+- name: Update Daemon umask to 027 in /etc/sysconfig/init
+  become: true
+  lineinfile:
+    dest: /etc/sysconfig/init
+    regexp: '^umask'
+    state: present
+    line: 'umask 027'
+    backup: no
+
+- name: 5.1.2 Secure root crontab
+  become: true
+  file:
+    path: /etc/crontab
+    owner: root
+    group: root
+    mode: "u=rw,g=,o="
+
+- name: 5.1.3-7 Secure Crontab
+  become: true
+  file:
+    path: "{{ item }}"
+    owner: root
+    mode: og-rwx
+    state: directory
+  with_items:
+     - /etc/cron.hourly
+     - /etc/cron.daily
+     - /etc/cron.weekly
+     - /etc/cron.monthly
+     - /etc/cron.d
+
+- name: 5.1.8 Add /etc/at.allow and /etc/cron.allow
+  become: true
+  copy:
+    content: ""
+    dest: "{{ item }}"
+    owner: root
+    mode: og-rwx
+    force: no
+  with_items:
+     - /etc/cron.allow
+     - /etc/at.allow
+
+- name: 5.1.8 Remove /etc/cron.deny and /etc/at.deny
+  become: true
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+     - /etc/cron.deny
+     - /etc/at.deny
+
+- name: 5.2.1 Set permissions on /etc/ssh/sshd_config
+  become: true
+  file:
+    path: /etc/ssh/sshd_config
+    owner: root
+    mode: 0600
+    state: file
+
+- name: 5.2 Configure /etc/ssh/sshd_config - includes 5.2.13, 5.2.11
+  become: true
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^{{ item.key }}"
+    line: "{{ item.key }} {{ item.value }}"
+    backup: no
+  with_dict: "{{ sshd_config }}"
+
+- name: 5.2.16 Create the SSH Banner
+  become: true
+  template:
+    src: ssh-banner.j2
+    dest: /etc/ssh/ssh-banner
+  when: env is defined and env == "prod"
+  notify:
+    - Restart the ssh service
+
+- name: 5.3.1 Secure PAM settings
+  become: true
+  lineinfile:
+    dest: /etc/security/pwquality.conf
+    regexp: "^{{ item.key }}"
+    line: "{{ item.key }} = {{ item.value }}"
+    backup: no
+  with_dict: "{{ pwquality_conf }}"
+
+- name: 5.3 Secure pam system-auth
+  become: true
+  lineinfile:
+    dest: /etc/pam.d/system-auth
+    regexp: "^password[ ]+requisite"
+    line: "password    requisite      pam_pwquality.so try_first_pass local_users_only retry=3 authtok_type="
+    backup: no
+
+- name: 5.3 Secure pam system-auth password sufficient
+  become: true
+  lineinfile:
+    dest: /etc/pam.d/system-auth
+    regexp: "^password[ ]+sufficient"
+    line: "password    sufficient     pam_unix.so remember=5"
+    backup: no
+
+- name: 5.4.1.1-3 Update /etc/login.defs
+  become: true
+  lineinfile:
+    dest: /etc/login.defs
+    regexp: "^{{ item.key }}"
+    line: "{{ item.key }} = {{ item.value }}"
+  with_dict: "{{ login_defs }}"
+
+- name: 5.4.4 Ensure default user umask is 027 or more restrictive - /etc/profile /etc/bashrc
+  become: true
+  replace:
+    dest: '{{ item }}'
+    regexp: '(\s+)else\n(\s+)umask.*'
+    replace: '\1else\n\2umask 027'
+  with_items:
+   - /etc/bashrc
+   - /etc/profile
+
+- name: 5.4.4 File profiles under /etc/profile.d/
+  become: true
+  find:
+    path: "/etc/profile.d/"
+    file_type: file
+    recurse: yes
+    depth: 2
+  register: outprofiles
+
+- name: 5.4.4 Ensure default user umask is 027 or more restrictive - /etc/profile.d/*
+  become: true
+  replace:
+    dest: '{{ item.path }}'
+    regexp: '(\s+)else\n(\s+)umask.*'
+    replace: '\1else\n\2umask 027'
+  with_items: "{{ outprofiles.files }}"
+
+- name: 5.6 Edit /etc/pam.d/su with wheel required
+  become: true
+  lineinfile:
+    dest: /etc/pam.d/su
+    regexp: "^auth required"
+    line: "auth required pam_wheel.so use_uid"

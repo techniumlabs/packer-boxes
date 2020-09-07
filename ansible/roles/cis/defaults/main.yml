@@ -1,0 +1,63 @@
+---
+# This is where you can change settings, they are
+# currently configured for Sean O's Concord baseline
+# I left "PermitRootLogin" as "yes" so ansible will keep
+# working, this should be changed when ansible is run
+# as a service account user instead.
+#
+#
+# Make sure to quote yes and no, or they will
+# evaluate to "true" and "false"
+#
+sysctl_conf:
+  net.ipv4.conf.default.send_redirects: 0
+  net.ipv4.conf.default.log_martians: 1
+  net.ipv4.conf.default.accept_redirects: 0
+  net.ipv4.conf.default.secure_redirects: 0
+  net.ipv4.conf.default.accept_source_route: 0
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.all.log_martians: 1
+  net.ipv4.conf.all.secure_redirects: 0
+  net.ipv4.conf.all.accept_source_route: 0
+  net.ipv4.conf.all.rp_filter: 1
+  net.ipv4.conf.default.rp_filter: 1
+  net.ipv4.tcp_syncookies: 1
+  net.ipv4.icmp_ignore_bogus_error_responses: 1
+  net.ipv4.icmp_echo_ignore_broadcasts: 1
+  net.ipv4.ip_forward: 0
+  fs.suid_dumpable: 0
+  kernel.randomize_va_space: 2
+
+pwquality_conf:
+  minlen: 14
+  dcredit: -1
+  ucredit: -1
+  lcredit: -1
+  ocredit: -1
+
+login_defs:
+  PASS_MAX_DAYS: 90
+  PASS_MIN_DAYS: 7
+  PASS_MIN_LEN: 12
+
+network:
+  NETWORKING_IPV6: "no"
+  IPV6INIT: "no"
+
+sshd_config:
+  Protocol: 2
+  Ciphers: aes128-ctr,aes192-ctr,aes256-ctr
+  LogLevel: INFO
+  MaxAuthTries: 4
+  HostbasedAuthentication: "no"
+  IgnoreRhosts: "yes"
+  PermitRootLogin: "no"
+  PermitEmptyPasswords: "no"
+  X11Forwarding: "no"
+  PermitUserEnvironment: "no"
+  ClientAliveInterval: 300
+  ClientAliveCountMax: 0
+  Banner: /etc/ssh/ssh-banner
+  LoginGraceTime: 60
+  MACs: hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com

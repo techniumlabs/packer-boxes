@@ -1,0 +1,52 @@
+---
+
+- name: 2.2.2 Ensure X Window System is not installed
+  become: true
+  yum:
+    name: xorg-x11*
+    state: absent
+
+- name: 2.2.3 Ensure Avahi Server is not enabled
+  become: true
+  service:
+    name: avahi-daemon
+    state: stopped
+    enabled: no
+  register: ansible_output
+  ignore_errors: yes # in case service does not exist
+
+- name: 2.2.8 Ensure DNS Server is not enabled
+  become: true
+  service:
+    name: named
+    state: stopped
+    enabled: no
+  register: ansible_output
+  ignore_errors: yes  # in case service does not exist
+
+- name: 2.2.7 Ensure NFS and RPC are not enabled - nfs
+  become: true
+  service:
+    name: nfs
+    state: stopped
+    enabled: no
+  register: ansible_output
+  ignore_errors: yes
+
+- name: 2.2.7 Ensure NFS and RPC are not enabled - nfs-server
+  become: true
+  service:
+    name: nfs-server
+    state: stopped
+    enabled: no
+  register: ansible_output
+  ignore_errors: yes  # in case service does not exist
+
+- name: 2.2.7 Ensure NFS and RPC are not enabled - rpcbind
+  become: true
+  service:
+    name: rpcbind
+    state: stopped
+    enabled: no
+  register: ansible_output
+  ignore_errors: yes  # in case service does not exist
